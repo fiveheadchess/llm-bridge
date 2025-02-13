@@ -4,6 +4,8 @@ use tokio::net::TcpListener;
 use tracing::{error, info};
 use tracing_subscriber;
 
+mod modules;
+
 #[derive(Deserialize)]
 struct LLMRequest {
     prompt: String,
