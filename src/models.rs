@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ClaudeMessage {
     pub role: String,
     pub content: String,
@@ -113,7 +113,7 @@ pub struct MessageDeltaContent {
 }
 
 // Update the ClaudeApiRequest to include stream option
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct ClaudeStreamApiRequest {
     pub model: String,
     pub max_tokens: u32,
