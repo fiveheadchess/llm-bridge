@@ -1,5 +1,4 @@
 use axum::{
-    extract::State,
     response::sse::{Event, Sse},
     routing::post,
     Json, Router,
@@ -7,8 +6,7 @@ use axum::{
 use futures::stream::Stream;
 use futures_util::StreamExt;
 use reqwest::header::{HeaderMap, HeaderValue};
-use std::{error::Error as StdError, sync::Arc};
-use tokio::sync::Semaphore;
+use std::error::Error as StdError;
 use tracing::info;
 
 mod models;
