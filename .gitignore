@@ -23,3 +23,16 @@ Cargo.lock
 # Added by cargo
 
 /target
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/.pytest_cache/
+**/.env
+**/.venv
+**/env/
+**/venv/
+**/ENV/
+**/.coverage
+**/htmlcov/
