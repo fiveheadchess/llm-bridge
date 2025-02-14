@@ -41,7 +41,7 @@ echo "ANTHROPIC_API_KEY=your_key_here" > .env
 ```bash
 # Create venv in test directory
 cd test
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 
 # Install dependencies
