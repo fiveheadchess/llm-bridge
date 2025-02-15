@@ -12,6 +12,14 @@ pub struct ClaudeApiRequest {
     pub messages: Vec<ClaudeMessage>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ClaudeStreamApiRequest {
+    pub model: String,
+    pub max_tokens: u32,
+    pub messages: Vec<ClaudeMessage>,
+    pub stream: bool,
+}
+
 #[derive(Deserialize, Debug)]
 pub struct ClaudeContentItem {
     text: String,
