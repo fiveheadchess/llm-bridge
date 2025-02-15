@@ -38,9 +38,9 @@ def test_stream_response():
 
 def test_invalid_request():
     request_data = {
-        "model": "invalid-model",
+        "model": "claude-3-sonnet-20240229",
         "max_tokens": 1000,
-        "messages": [],
+        "messages": [],  # Empty messages should trigger 400
         "stream": True,
     }
 
@@ -51,4 +51,4 @@ def test_invalid_request():
         headers={"Accept": "text/event-stream"},
     )
 
-    assert response.status_code != 200
+    assert response.status_code == 400
