@@ -120,15 +120,6 @@ pub struct MessageDeltaContent {
     pub stop_sequence: Option<String>,
 }
 
-// Update the ClaudeApiRequest to include stream option
-#[derive(Serialize, Deserialize)]
-pub struct ClaudeStreamApiRequest {
-    pub model: String,
-    pub max_tokens: u32,
-    pub messages: Vec<ClaudeMessage>,
-    pub stream: bool,
-}
-
 // Add thfunction to parse SSE events
 pub fn parse_sse_line(line: &str) -> Option<StreamEvent> {
     if line.starts_with("data: ") {
