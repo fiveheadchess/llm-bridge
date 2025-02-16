@@ -1,16 +1,18 @@
 use crate::models::{ClaudeStreamApiRequest, StreamEvent};
 use axum::extract::ws::Message;
-use futures_util::{Stream, StreamExt};
+use futures_util::stream::BoxStream;
+use futures_util::StreamExt;
 use reqwest::header::{HeaderMap, HeaderValue};
 use std::error::Error;
-use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info};
+
+type StreamResult = Result<Message, Box<dyn Error + Send + Sync>>;
 
 /// Streams AI responses via WebSockets.
 pub async fn stream_ai_response(
     api_key: String,
     request: ClaudeStreamApiRequest,
-) -> impl Stream<Item = Result<Message, Box<dyn Error + Send + Sync>>> {
+) -> BoxStream<'static, StreamResult> {
     info!("Processing request for model: {}", request.model);
 
     let mut headers = HeaderMap::new();
@@ -34,11 +36,14 @@ pub async fn stream_ai_response(
         }
         Err(e) => {
             error!("Claude API connection failed: {}", e);
-            return tokio_stream::once(async { Err(Box::new(e) as Box<dyn Error + Send + Sync>) });
+            let error_stream = futures_util::stream::once(async move {
+                Err(Box::new(e) as Box<dyn Error + Send + Sync>)
+            });
+            return Box::pin(error_stream);
         }
     };
 
-    response.bytes_stream().map(move |chunk| match chunk {
+    let stream = response.bytes_stream().map(move |chunk| match chunk {
         Ok(chunk) => {
             let text = match String::from_utf8(chunk.to_vec()) {
                 Ok(s) => s,
@@ -68,7 +73,9 @@ pub async fn stream_ai_response(
             error!("Error processing stream chunk: {}", e);
             Err(Box::new(e) as Box<dyn Error + Send + Sync>)
         }
-    })
+    });
+
+    Box::pin(stream)
 }
 
 /// Parses SSE lines into `StreamEvent`
