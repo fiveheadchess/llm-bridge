@@ -38,18 +38,15 @@ async fn handle_connection(mut socket: TcpStream) {
     match socket.read(&mut buffer).await {
         Ok(n) if n == 0 => {
             // Connection closed
-            return;
         }
         Ok(n) => {
             // Echo the data back
             if let Err(e) = socket.write_all(&buffer[..n]).await {
                 error!("Failed to write to socket: {}", e);
-                return;
             }
         }
         Err(e) => {
             error!("Failed to read from socket: {}", e);
-            return;
         }
     }
 }
