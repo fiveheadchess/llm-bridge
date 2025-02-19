@@ -30,6 +30,7 @@ Cargo.lock
 **/*$py.class
 **/.pytest_cache/
 **/.env
+**/.env.test
 **/.venv
 **/env/
 **/venv/
