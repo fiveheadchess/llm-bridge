@@ -1,34 +1,54 @@
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use std::sync::Arc;
+use tokio::runtime::Builder;
+use tokio::{
+    io::AsyncReadExt, io::AsyncWriteExt, net::TcpListener, net::TcpStream, sync::Semaphore,
+};
 use tracing::{error, info};
 
+/// Thread Model:
+///     tokio by default creates a mult threaded scheduler
+///         with a number of worker threads equal to the number of CPU cores
+///         #[tokio::main] uses this default configuration
+///     worker threads are responsible for executing tasks that are
+///         spawned with tokio::spawn()
+///         the tasks are lightweight "green threads" (coroutines or async tasks)
+///         they can be moved between worker threads
+///
+/// Backlog Queue:
+///     at the OS level, incoming TCP conns are handled through a listening
+///     socket's backlog Queue
+///     When a TcpListener is created the OS maintains
+///         SYN Queue -> incomplete conns
+///         Accept Queue (complete conns waiting to be accepted)
+///     in linux you can check max backlog size with
+///         "cat /proc/sys/net/core/somaxconn"
 #[tokio::main]
 async fn main() {
-    // Initialize logging
-    tracing_subscriber::fmt().with_env_filter("info").init();
+    // TODO: this is a mac M1 optimization that needs to be removed
+    //       when deployed on cloud
+    let runtime = Builder::new_multi_thread()
+        .worker_threads(6)
+        .thread_name("worker")
+        .build()
+        .unwrap();
 
-    info!("Starting TCP Echo Server...");
+    // TODO: conservative connection limit to start, change for prod
+    let connection_semaphore = Arc::new(Semaphore::new(10_000));
 
-    // Bind to the address
-    let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    info!("Server running on tcp://0.0.0.0:8080");
-
-    // Accept connections
-    loop {
-        match listener.accept().await {
-            Ok((socket, addr)) => {
-                info!("New client connected: {}", addr);
-
-                // Spawn a new task for each connection
-                tokio::spawn(async move {
-                    handle_connection(socket).await;
-                });
-            }
-            Err(e) => {
-                error!("Failed to accept connection: {}", e);
-            }
+    runtime.block_on(async {
+        // TODO: this address must be turned to an env var for prod
+        let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();
+        info!("server running with 6 worker threads, 10l connection limit");
+        loop {
+            let permit = connection_semaphore.clone();
+            let (socket, _addr) = listener.accept().await.unwrap();
+            tokio::spawn(async move {
+                // just reply then terminate
+                handle_connection(socket).await;
+                drop(permit);
+            });
         }
-    }
+    })
 }
 
 async fn handle_connection(mut socket: TcpStream) {
