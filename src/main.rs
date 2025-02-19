@@ -1,5 +1,6 @@
+use dotenvy::dotenv;
 use futures_util::StreamExt;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::env;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
@@ -16,8 +17,15 @@ struct ClientRequest {
     prompt: String,
 }
 
+#[derive(Serialize, Deserialize)]
+struct EchoRequest {
+    message: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // load dotenv
+    dotenv().ok();
     // bind the socket TcpListener
     let listener = TcpListener::bind("0.0.0.0:8080").await?;
     println!("listening on port 8080");
@@ -44,8 +52,17 @@ async fn handle_connection(mut socket: TcpStream) -> Result<(), Box<dyn std::err
     reader.read_line(&mut line).await?;
 
     if env::var("ECHO_MODE").is_ok() {
-        writer.write_all(line.as_bytes()).await?;
-        writer.flush().await?;
+        match serde_json::from_str::<EchoRequest>(&line) {
+            Ok(_) => {
+                writer.write_all(line.as_bytes()).await?;
+                writer.flush().await?;
+            }
+            Err(e) => {
+                writer
+                    .write_all(format!("Invalid JSON: {}\n", e).as_bytes())
+                    .await?;
+            }
+        }
         return Ok(());
     }
 

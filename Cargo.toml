@@ -16,5 +16,6 @@ futures-util = "0.3"
 tokio-stream = "0.1.17"
 tokio-tungstenite = { version = "0.23.1" }
 uuid = {version = "1.13.1", features = ["v4"]}
+dotenvy = "0.15.7"
 
 [patch.crates-io]
