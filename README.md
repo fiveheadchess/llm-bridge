@@ -1,6 +1,22 @@
 # LLM Bridge
 
-A Rust-based server for managing concurrent client connections to AI services, focusing on Server-Sent Events (SSE) streaming.
+A Rust-based server for managing concurrent client connections to AI services, focusing on protocol simplicity.
+
+Right now this is in a pre-alpha state and is just being used for a POC.
+Right now Websockets are not supported, the protocol is a custom TCP sequence where a JSON request
+is received from the client with a prompt, and a message from the LLM is streamed back in chunks.
+
+```
+ Client          Server          Claude API
+  |               |                |
+  |--JSON REQ---->|                |
+  |               |---API REQ----->|
+  |<--STREAM-----|<---STREAM------|
+  |<--STREAM-----|<---STREAM------|
+  |<---DONE------|<----DONE-------|
+  |    CLOSE     |                |
+
+```
 
 ## Architecture
 
@@ -11,11 +27,7 @@ A Rust-based server for managing concurrent client connections to AI services, f
 
 ## Features
 
-- Concurrent client connection handling
-- SSE streaming from AI providers
-- Robust error handling
-- Docker containerization
-- Automated testing
+- overly simple TCP connection handling
 
 ## Planned Improvements
 
