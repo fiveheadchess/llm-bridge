@@ -3,6 +3,7 @@ import json
 import requests
 import sys
 import time
+import argparse
 
 
 def stream_response_tcp(prompt):
@@ -36,13 +37,15 @@ def stream_response_tcp(prompt):
 
             print("\n" + "-" * 50)
             print(f"Total response length: {len(buffer)} characters")
+            return buffer
     except ConnectionRefusedError:
         print("TCP connection refused - server may be using HTTP only")
     except Exception as e:
         print(f"TCP test error: {e}")
+    return None
 
 
-def stream_response_rest(prompt):
+def stream_response_rest(prompt, host="localhost", port=8080):
     """HTTP REST streaming - works with the new server implementation"""
     try:
         # Create the request
@@ -50,7 +53,7 @@ def stream_response_rest(prompt):
         print(f"Sending REST request: {request}")
 
         # Make the request with streaming enabled
-        url = "http://localhost:8080/api/llm"  # Updated URL path and port
+        url = f"http://{host}:{port}/api/llm"  # Updated URL path and port
         headers = {"Content-Type": "application/json"}
 
         # Use streaming response
@@ -80,7 +83,8 @@ def stream_response_rest(prompt):
                     start_time = time.time()
 
                 # Check for timeout
-                if time.time() - start_time > 30:  # 30 second timeout
+                current_time = time.time()
+                if current_time - start_time > 30:  # 30 second timeout
                     print("\nRequest timed out")
                     break
 
@@ -88,11 +92,14 @@ def stream_response_rest(prompt):
         print(
             f"Total response length: {len(buffer)} characters in {chunk_count} chunks"
         )
+        print(f"Total time: {time.time() - start_time:.2f} seconds")
+        return buffer
     except requests.exceptions.RequestException as e:
         print(f"REST test error: {e}")
+    return None
 
 
-def test_echo_endpoint():
+def test_echo_endpoint(host="localhost", port=8080):
     """Test the echo endpoint"""
     try:
         # Create the request
@@ -101,7 +108,7 @@ def test_echo_endpoint():
         print(f"Sending echo request: {request}")
 
         # Make the request
-        url = "http://localhost:8080/api/echo"
+        url = f"http://{host}:{port}/api/echo"
         headers = {"Content-Type": "application/json"}
         response = requests.post(url, json=request, headers=headers)
 
@@ -116,6 +123,7 @@ def test_echo_endpoint():
             response_json = response.json()
             if response_json.get("message") == message:
                 print("Echo test successful!")
+                return True
             else:
                 print("Echo test failed: unexpected response")
         except json.JSONDecodeError:
@@ -124,19 +132,46 @@ def test_echo_endpoint():
     except requests.exceptions.RequestException as e:
         print(f"Echo test error: {e}")
 
+    return False
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Test the LLM Bridge API")
+    parser.add_argument(
+        "--tcp-only", action="store_true", help="Test only TCP streaming"
+    )
+    parser.add_argument(
+        "--rest-only", action="store_true", help="Test only REST streaming"
+    )
+    parser.add_argument(
+        "--echo-only", action="store_true", help="Test only the echo endpoint"
+    )
+    parser.add_argument(
+        "--host", default="localhost", help="Server hostname (default: localhost)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8080, help="Server port (default: 8080)"
+    )
+    parser.add_argument(
+        "--prompt",
+        default="Write a haiku about rust programming",
+        help="Custom prompt to send to the LLM",
+    )
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    test_prompt = "Write a haiku about rust programming"
+    args = parse_args()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "--tcp-only":
+    if args.tcp_only:
         print("Testing TCP streaming only:")
-        stream_response_tcp(test_prompt)
-    elif len(sys.argv) > 1 and sys.argv[1] == "--rest-only":
+        stream_response_tcp(args.prompt)
+    elif args.rest_only:
         print("Testing REST streaming only:")
-        stream_response_rest(test_prompt)
-    elif len(sys.argv) > 1 and sys.argv[1] == "--echo-only":
+        stream_response_rest(args.prompt, args.host, args.port)
+    elif args.echo_only:
         print("Testing echo endpoint only:")
-        test_echo_endpoint()
+        test_echo_endpoint(args.host, args.port)
     else:
         print("Testing REST streaming:")
-        stream_response_rest(test_prompt)
+        stream_response_rest(args.prompt, args.host, args.port)
