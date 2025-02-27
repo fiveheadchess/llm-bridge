@@ -106,6 +106,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+// Helper function to add CORS headers to responses
+fn add_cors_headers(response: &mut Response<Body>) {
+    let headers = response.headers_mut();
+    headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
+    headers.insert(
+        "Access-Control-Allow-Methods",
+        HeaderValue::from_static("GET, POST, OPTIONS"),
+    );
+    headers.insert(
+        "Access-Control-Allow-Headers",
+        HeaderValue::from_static("Content-Type"),
+    );
+}
+
 // Function to handle incoming HTTP requests
 async fn handle_request(
     req: Request<Body>,
@@ -126,8 +140,15 @@ async fn handle_request(
         client_info.request_path
     );
 
+    // Handle preflight OPTIONS requests
+    if method == Method::OPTIONS {
+        let mut response = Response::new(Body::empty());
+        add_cors_headers(&mut response);
+        return Ok(response);
+    }
+
     // Match on the path and method to determine the action
-    let response = match (method.as_str(), path.as_str()) {
+    let mut response = match (method.as_str(), path.as_str()) {
         // API endpoints
         ("POST", "/api/echo") => handle_echo(req, Arc::clone(&client_info)).await,
         ("POST", "/api/llm") => handle_llm(req, Arc::clone(&client_info)).await,
@@ -148,7 +169,8 @@ async fn handle_request(
         // Health check endpoint
         ("GET", "/health") => {
             println!("Client [{}]: health check", client_info.id);
-            Ok(Response::new(Body::from("OK")))
+            let mut response = Response::new(Body::from("OK"));
+            Ok(response)
         }
 
         // Handle any other request with a 404
@@ -159,6 +181,11 @@ async fn handle_request(
             Ok(response)
         }
     };
+
+    // Add CORS headers to all responses
+    if let Ok(ref mut res) = response {
+        add_cors_headers(res);
+    }
 
     // Log request completion for non-streaming responses
     if path != "/api/llm" {
@@ -288,9 +315,6 @@ async fn handle_llm(
             response
                 .headers_mut()
                 .insert("Connection", HeaderValue::from_static("keep-alive"));
-            response
-                .headers_mut()
-                .insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
 
             // Create a clone of client_info for the spawned task
             let client_info_clone = Arc::clone(&client_info);
