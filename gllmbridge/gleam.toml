@@ -1,4 +1,4 @@
-name = "gllmbridge"
+name = "app"
 version = "1.0.0"
 
 # Fill out these fields if you intend to generate HTML documentation or publish
@@ -20,3 +20,6 @@ wisp = ">= 1.5.3 and < 2.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+
+[run]
+main = "app"
