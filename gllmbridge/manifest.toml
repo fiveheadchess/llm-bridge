@@ -3,6 +3,7 @@
 
 packages = [
   { name = "directories", version = "1.1.0", build_tools = ["gleam"], requirements = ["envoy", "gleam_stdlib", "platform", "simplifile"], otp_app = "directories", source = "hex", outer_checksum = "BDA521A4EB9EE3A7894F0DC863797878E91FF5C7826F7084B2E731E208BDB076" },
+  { name = "elli", version = "3.3.0", build_tools = ["rebar3"], requirements = [], otp_app = "elli", source = "hex", outer_checksum = "698B13B33D05661DB9FE7EFCBA41B84825A379CCE86E486CF6AFF9285BE0CCF8" },
   { name = "envoy", version = "1.0.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "95FD059345AA982E89A0B6E2A3BF1CF43E17A7048DCD85B5B65D3B9E4E39D359" },
   { name = "exception", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "F5580D584F16A20B7FCDCABF9E9BE9A2C1F6AC4F9176FA6DD0B63E3B20D450AA" },
   { name = "filepath", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "67A6D15FB39EEB69DD31F8C145BB5A421790581BD6AA14B33D64D5A55DBD6587" },
@@ -27,6 +28,7 @@ packages = [
 ]
 
 [requirements]
+elli = { version = ">= 3.3.0 and < 4.0.0" }
 gleam_erlang = { version = ">= 0.34.0 and < 1.0.0" }
 gleam_http = { version = ">= 4.0.0 and < 5.0.0" }
 gleam_stdlib = { version = ">= 0.44.0 and < 2.0.0" }

@@ -26,3 +26,9 @@ gleam build
 gleam run   # Run the project
 gleam test  # Run the tests
 ```
+
+## Test Echo Endpoint
+
+```
+curl -X POST -d 'Hello, Gleam!' http://localhost:3000
+```
