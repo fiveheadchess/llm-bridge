@@ -35,11 +35,11 @@ fn echo_body(request: Request(Connection)) -> Response(ResponseData) {
     request
     |> request.get_header("content-type")
     |> result.unwrap("text/plain")
-  // Convert body to string using erlang/otp
 
   // logging the request body
   mist.read_body(request, 1024 * 1024 * 10)
   |> result.map(fn(req) {
+    // bit array to string
     let body_str = case bit_array.to_string(req.body) {
       Ok(str) -> str
       Error(_) ->
@@ -47,8 +47,7 @@ fn echo_body(request: Request(Connection)) -> Response(ResponseData) {
         <> int.to_string(bit_array.bit_size(req.body))
         <> " bytes)"
     }
-
-    // Print the body
+    // print body in place of logging
     io.println("Request Body: " <> body_str)
 
     response.new(200)
