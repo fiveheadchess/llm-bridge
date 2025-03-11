@@ -30,5 +30,9 @@ gleam test  # Run the tests
 ## Test Echo Endpoint
 
 ```
-curl -X POST -d 'Hello, Gleam!' http://localhost:3000
+curl -X POST http://localhost:8080/echo \
+     -H "Content-Type: text/plain" \
+     -d "POST request"
 ```
+
+response will be "POST request"
